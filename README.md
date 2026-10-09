@@ -27,6 +27,7 @@ Cada pregunta lleva `src` (posición en el módulo, que coincide con la numeraci
 
 ```
 index.html                 la herramienta completa (datos + lógica + estilos)
+icon-180.png, icon-512.png, manifest.webmanifest   ícono e instalación como app en el teléfono
 docs/design-tokens.json    tokens de diseño de la interfaz (también embebidos en index.html)
 docs/METODOLOGIA.md        cómo se construyó y validó el banco de preguntas
 CHANGELOG.md               historial de versiones

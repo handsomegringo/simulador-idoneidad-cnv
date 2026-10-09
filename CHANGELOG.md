@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.2 — 2026-10-09
+- Ícono e instalación como app en iPhone/Android: `icon-180.png`, `icon-512.png`, `manifest.webmanifest` y metaetiquetas para pantalla completa.
+
 ## 2.1 — 2026-10-09
 - Eliminado por completo el juego Snake ("Break de estudio"): tarjeta, pantalla, código y estilos. En 2.0 solo estaba oculto por script y seguía apareciendo en visores que no ejecutan JavaScript.
 
