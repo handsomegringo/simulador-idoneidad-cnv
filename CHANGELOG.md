@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.1 — 2026-10-09
+- Eliminado por completo el juego Snake ("Break de estudio"): tarjeta, pantalla, código y estilos. En 2.0 solo estaba oculto por script y seguía apareciendo en visores que no ejecutan JavaScript.
+
 ## 2.0 — 2026-10-09
 - Interfaz rediseñada con lenguaje visual de terminal (fondo negro, acento ámbar, monoespaciada, sin radios ni sombras). Tokens en `docs/design-tokens.json`.
 - Práctica por módulo: selección de preguntas por número o rango.
