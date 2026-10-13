@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.3 — 2026-10-13
+- Repaso de errores por módulo: en la pantalla de cada módulo, botón "Repasar mis errores de este módulo (N)"; la grilla de módulos muestra los pendientes de cada uno. "Mis errores" del inicio sigue agrupando todos.
+
 ## 2.2 — 2026-10-09
 - Ícono e instalación como app en iPhone/Android: `icon-180.png`, `icon-512.png`, `manifest.webmanifest` y metaetiquetas para pantalla completa.
 

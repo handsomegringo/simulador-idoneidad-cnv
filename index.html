@@ -604,6 +604,7 @@ body.skin-terminal ::selection{background:var(--gold);color:#000;}
   </div>
   <div id="ms-history"></div>
   <button class="btn-primary" onclick="startModule()">Comenzar →</button>
+  <button class="btn-secondary" id="ms-wrong-btn" onclick="startErrorReview(currentMod)" style="margin-top:.6rem;"></button>
 </div>
 
 <!-- ══ EXAM CONFIG ══ -->
@@ -1577,10 +1578,13 @@ function renderWrongCard(){
   const n=wrongSetCount();
   el.textContent = n ? (n+' pregunta'+(n===1?'':'s')+' pendiente'+(n===1?'':'s')+' · se quitan al acertarlas acá') : 'Todavía no hay errores guardados';
 }
-function startErrorReview(){
+let reviewModFilter = null;
+function wrongCountForMod(m){ const ws=getWrongSet(); return ALL_Q.filter(q=>q.mod===m && ws[q.src]).length; }
+function startErrorReview(modFilter){
+  reviewModFilter = modFilter || null;
   const ws=getWrongSet();
-  const sel=ALL_Q.filter(q=>ws[q.src]);
-  if(!sel.length){ showAppModal('No hay errores acumulados. Se guardan automáticamente al terminar una práctica por módulo o un simulacro.'); return; }
+  const sel=ALL_Q.filter(q=>ws[q.src] && (!reviewModFilter || q.mod===reviewModFilter));
+  if(!sel.length){ showAppModal(reviewModFilter ? 'No hay errores pendientes en este módulo. Se guardan al terminar una práctica o un simulacro, y se quitan al acertarlos en el repaso.' : 'No hay errores acumulados. Se guardan automáticamente al terminar una práctica por módulo o un simulacro.'); return; }
   mode='exam'; reviewMode=true; flagged=new Set();
   suddenDeathFailReason=''; suddenDeathLastScore=0; suddenDeathFailIdx=-1;
   examCfgBackup={...examCfg}; examCfg={timeSecs:0, corrMode:'instant', hardcore:false};
@@ -1592,10 +1596,10 @@ function startErrorReview(){
   document.getElementById('pause-btn').style.display='none';
   document.getElementById('score-pill').style.display='inline';
   showScreen('scr-quiz');
-  document.getElementById('hdr-sub').textContent = examQ.length+' errores acumulados · corrección inmediata';
+  document.getElementById('hdr-sub').textContent = examQ.length+(reviewModFilter?' errores pendientes · '+MOD_INFO[reviewModFilter].name:' errores acumulados')+' · corrección inmediata';
   renderQ(0);
 }
-function clearWrongSet(){ saveWrongSet({}); renderWrongCard(); }
+function clearWrongSet(){ saveWrongSet({}); renderWrongCard(); buildModGrid(); }
 function getModHistory(mod){
   const d = loadStorage();
   return (d.modHistory && d.modHistory[mod]) || [];
@@ -2279,7 +2283,7 @@ function buildModGrid(){
       <div class="mod-info">
         <div class="mod-name">${info.name}</div>
         <div class="mod-sub">${info.short}</div>
-        <div class="mod-count">${total} preguntas</div>
+        <div class="mod-count">${total} preguntas${wrongCountForMod(m)?' · '+wrongCountForMod(m)+' errores pendientes':''}</div>
         <div class="mod-score-badge" id="mod-score-${m}" style="display:none;font-family:'JetBrains Mono',monospace;font-size:.68rem;margin-top:.35rem;color:var(--gray)"></div>
       </div>`;
     if(modScores[m]) renderModScore(div.querySelector(`#mod-score-${m}`), modScores[m]);
@@ -2315,6 +2319,9 @@ function histAvgRow(list, label){
 function openModule(m){
   currentMod=m;
   const rangeInp=document.getElementById('ms-range'); rangeInp.value=modRangeText[m]||''; updateRangeHint();
+  const wb=document.getElementById('ms-wrong-btn'); const wn=wrongCountForMod(m);
+  wb.textContent = wn ? 'Repasar mis errores de este módulo ('+wn+')' : 'Sin errores pendientes en este módulo';
+  wb.disabled = !wn; wb.style.opacity = wn ? '1' : '.5';
   const info=MOD_INFO[m];
   document.getElementById('ms-title').innerHTML=`Módulo <span>${info.name.replace('Módulo ','')}</span>`;
   document.getElementById('ms-sub').textContent=info.short;
@@ -2809,17 +2816,17 @@ function showResults(){
   if(!isHard && (mode==='module' || mode==='exam')) updateWrongSetFromRun();
   if(!reviewMode) recordRunPerformance();
   renderRadiography();
-  renderWrongCard();
+  renderWrongCard(); buildModGrid();
 
   // Buttons
   const btns=document.getElementById('res-btns');
   const wrongCount = ko + skip;
   const flaggedCount = flagged.size;
   if(reviewMode){
-    const left=wrongSetCount();
+    const rf=reviewModFilter; const left=rf?wrongCountForMod(rf):wrongSetCount();
     btns.innerHTML=`
-      ${left>0?'<button class="retry-wrong-btn" onclick="startErrorReview()">Repasar los que siguen pendientes ('+left+') →</button>':'<div style="color:var(--green);margin-bottom:.8rem;">✓ No quedan errores pendientes</div>'}
-      <button class="btn-secondary" onclick="showScreen('scr-home')">← Inicio</button>`;
+      ${left>0?'<button class="retry-wrong-btn" onclick="startErrorReview('+(rf||'')+')">Repasar los que siguen pendientes ('+left+') →</button>':'<div style="color:var(--green);margin-bottom:.8rem;">✓ No quedan errores pendientes'+(rf?' en este módulo':'')+'</div>'}
+      ${rf?'<button class="btn-secondary" onclick="openModule('+rf+')">← Módulo</button> ':''}<button class="btn-secondary" onclick="showScreen('scr-home')">← Inicio</button>`;
     reviewMode=false; if(examCfgBackup){ examCfg=examCfgBackup; examCfgBackup=null; }
   } else if(isExam && isHard){
     btns.innerHTML=`
@@ -2960,7 +2967,7 @@ function closeAppModal(){
   if(wrap) wrap.hidden = true;
 }
 
-function resetReviewState(){ if(reviewMode){ reviewMode=false; if(examCfgBackup){ examCfg=examCfgBackup; examCfgBackup=null; } } }
+function resetReviewState(){ reviewModFilter=null; if(reviewMode){ reviewMode=false; if(examCfgBackup){ examCfg=examCfgBackup; examCfgBackup=null; } } }
 function confirmLeaveModal(){
   resetReviewState();
   closeLeaveModal();
